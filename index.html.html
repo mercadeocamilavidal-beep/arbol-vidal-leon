@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Árbol Vidal León</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
@@ -89,8 +90,17 @@ svg#lines{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 @media (max-width:700px){
   #panel{top:auto;width:100%;height:52vh;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;transform:translateY(105%)}
   .legend{font-weight:500;display:none}
-  h1{font-size:17px}
+  h1{font-size:16px}
+  .strip{margin-top:4px;width:100%}.sub{display:none}
+  #top{padding-top:8px;gap:6px}
+  .row1{flex-wrap:nowrap;gap:10px}.row1>div:first-child{flex:0 0 auto}
+  .search{flex:1 1 auto;max-width:none}
+  .chip{padding:6px 12px;font-size:12px}
+  .hero img{height:76px!important;width:auto!important}.hero h2{font-size:19px!important}
+  #hint{display:block}
 }
+#hint{display:none;position:absolute;z-index:4;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:600 12.5px var(--f-body);padding:9px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;transition:opacity .6s;white-space:nowrap}
+#hint.off{opacity:0}
 @media (prefers-reduced-motion:reduce){#world.anim,#panel{transition:none}}
 </style>
 
@@ -103,6 +113,7 @@ svg#lines{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
   <nav class="chips" id="chips" aria-label="Ramas"></nav>
 </header>
 <div class="zoom"><button class="zb" id="zin" aria-label="Acercar">+</button><button class="zb" id="zout" aria-label="Alejar">−</button><button class="zb" id="zfit" aria-label="Ver todo" title="Ver todo">⤢</button></div>
+<div id="hint">Pellizca para acercar · toca una rama arriba</div>
 <div class="legend"><span><i></i>pareja</span><span><i class="d"></i>un solo padre o madre</span></div>
 <aside id="panel" aria-live="polite"><button class="x" id="px" aria-label="Cerrar">×</button><div id="pb"></div></aside>
 
@@ -150,11 +161,13 @@ D.branches.filter(b=>b.t!=='Por conectar').forEach(b=>{const n=ids.filter(k=>PPL
 // transform
 function apply(){world.style.transform=`translate(${S.x}px,${S.y}px) scale(${S.s})`;world.style.setProperty('--inv',Math.max(1,.5/S.s))}
 function vp(){return{w:stage.clientWidth,h:stage.clientHeight}}
-function fitBox(x0,y0,x1,y1,anim,pad=40,topPad=120){const v=vp();const w=x1-x0,h=y1-y0;
+function TP(){return Math.round($('#top').offsetHeight+8)}
+function fitBox(x0,y0,x1,y1,anim,pad=40,topPad=TP()+10){const v=vp();const w=x1-x0,h=y1-y0;
   const s=Math.min((v.w-pad*2)/w,(v.h-topPad-pad-(innerWidth<=700&&panel.classList.contains('open')?v.h*.52:0))/h,1.1);
   const availH=v.h-topPad-pad;S.s=s;S.x=(v.w-w*s)/2-x0*s;S.y=topPad+Math.min(24,Math.max(0,(availH-h*s)/2))-y0*s;go(anim)}
 function go(anim){if(anim){world.classList.add('anim');setTimeout(()=>world.classList.remove('anim'),480)}apply()}
-function fit(anim){fitBox(0,40,D.W,D.H-20,anim,16,110)}
+function fit(anim){fitBox(0,40,D.W,D.H-20,anim,16,TP())}
+function initView(){if(innerWidth<=700&&PPL.jmaria&&PPL.susana){const s=.34,a=PPL.jmaria,b=PPL.susana,mx=(Math.min(a.x,b.x)+Math.max(a.x,b.x)+D.CW)/2;S.s=s;S.x=vp().w/2-mx*s;S.y=TP()+6-a.y*s;go(false)}else fit(false)}
 function focusBranch(b){fitBox(b.x0,b.y0-40,b.x1,b.y1,true)}
 function zoomAt(f,cx,cy,anim){const ns=Math.min(1.6,Math.max(.05,S.s*f));const r=ns/S.s;S.x=cx-(cx-S.x)*r;S.y=cy-(cy-S.y)*r;S.s=ns;go(anim)}
 $('#zin').onclick=()=>zoomAt(1.4,vp().w/2,vp().h/2,true);$('#zout').onclick=()=>zoomAt(1/1.4,vp().w/2,vp().h/2,true);$('#zfit').onclick=()=>fit(true);
@@ -174,7 +187,7 @@ const up=e=>{ptr.delete(e.pointerId);if(ptr.size<2)pinch=null;if(ptr.size===0){s
 stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
 stage.addEventListener('click',e=>{if(!moved&&!e.target.closest('.card')&&!e.target.closest('.bt'))select(null)});
 addEventListener('keydown',e=>{if(e.key==='Escape'){select(null);$('#results').hidden=true}});
-addEventListener('resize',()=>{if(!sel)fit(false)});
+addEventListener('resize',()=>{if(!sel)initView()});
 // relations
 const panel=$('#panel');
 function anc(k,s=new Set()){PPL[k].par.forEach(p=>{if(!s.has(p)){s.add(p);anc(p,s)}});return s}
@@ -187,11 +200,12 @@ function select(k,pan){sel=k;
   D.edges.forEach((e,i)=>{const on=set.has(e.c)&&e.par.some(p=>set.has(p));eEls[i].setAttribute('class','ln'+(e.dash?' dash':'')+(on?' hl':' dim'))});
   D.couples.forEach((c,i)=>{const on=set.has(c.a)&&set.has(c.b);cEls[i].setAttribute('class','cp'+(on?' hl':' dim'))});
   render(k,Dd);panel.classList.add('open');
+  if(pan&&innerWidth<=700){const p=PPL[k],v=vp(),ns=Math.max(.42,Math.min(S.s,.6)),top=TP(),avail=v.h*.46-top;S.s=ns;S.x=v.w/2-(p.x+D.CW/2)*ns;S.y=top+avail/2-(p.y+D.CH/2)*ns;go(true);return}
   if(pan){const p=PPL[k],v=vp();const nodes=[k,...A,...Dd];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
     nodes.forEach(i=>{const q=PPL[i];x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x+D.CW);y1=Math.max(y1,q.y+D.CH)});
     const right=innerWidth>700?340:0;
-    const w=x1-x0+60,h=y1-y0+40;const availW=v.w-right-40,availH=v.h-120-(innerWidth<=700?v.h*.54:30);
-    let s=Math.min(availW/w,availH/h,.9);s=Math.max(s,.28);S.s=s;S.x=(availW-(x1-x0)*s)/2+20-x0*s;S.y=110+Math.max(0,(availH-(y1-y0)*s)/2)-y0*s;go(true)}}
+    const w=x1-x0+60,h=y1-y0+40;const availW=v.w-right-40,availH=v.h-TP()-(innerWidth<=700?v.h*.54:30);
+    let s=Math.min(availW/w,availH/h,.9);s=Math.max(s,.28);S.s=s;S.x=(availW-(x1-x0)*s)/2+20-x0*s;S.y=TP()+Math.max(0,(availH-(y1-y0)*s)/2)-y0*s;go(true)}}
 function relBtn(k,label){const [a,b]=SUR[k];return `<button class="rel" data-k="${k}" style="--rc:${colOf(k)}"><img src="${PPL[k].ph}" alt=""><span>${a} ${b}${label?`<small>${label}</small>`:''}</span></button>`}
 function render(k,Dd){const p=PPL[k],br=D.branches.find(b=>b.id===p.br);
   const sb=sibs(k);const kids=p.ch,par=p.par,sp=p.sp;
@@ -218,5 +232,8 @@ q.addEventListener('input',()=>{const t=norm(q.value.trim());if(!t){res.hidden=t
   res.hidden=false;res.querySelectorAll('button').forEach(b=>b.onclick=()=>{select(b.dataset.k,true);res.hidden=true;q.value=''})});
 q.addEventListener('keydown',e=>{if(e.key==='Enter'){const b=res.querySelector('button');if(b)b.click()}});
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.hidden=true});
-fit(false);
+initView();
+{const h=$('#hint');if(h)setTimeout(()=>h.classList.add('off'),6000)}
 </script>
+
+</body></html>
